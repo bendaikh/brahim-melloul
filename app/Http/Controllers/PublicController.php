@@ -14,8 +14,8 @@ class PublicController extends Controller
      */
     public function index()
     {
-        $featuredArticles = Article::with(['brand', 'category'])->where('is_active', true)->take(6)->get();
-        $brands = Brand::all();
+        $featuredArticles = Article::with(['carLogo', 'category'])->where('is_active', true)->take(6)->get();
+        $brands = \App\Models\CarLogo::where('is_active', true)->get();
         $categories = Category::whereNull('parent_id')->get();
         
         return view('public.home', compact('featuredArticles', 'brands', 'categories'));
@@ -26,11 +26,11 @@ class PublicController extends Controller
      */
     public function catalog(Request $request)
     {
-        $query = Article::with(['brand', 'category'])->where('is_active', true);
+        $query = Article::with(['carLogo', 'category'])->where('is_active', true);
 
         if ($request->has('brand')) {
-            $query->whereHas('brand', function($q) use ($request) {
-                $q->where('slug', $request->brand);
+            $query->whereHas('carLogo', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->brand . '%');
             });
         }
 
@@ -52,7 +52,7 @@ class PublicController extends Controller
      */
     public function show($slug)
     {
-        $article = Article::with(['brand', 'category'])->where('slug', $slug)->firstOrFail();
+        $article = Article::with(['carLogo', 'category'])->where('slug', $slug)->firstOrFail();
         return view('public.article_detail', compact('article'));
     }
 }

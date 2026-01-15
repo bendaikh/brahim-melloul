@@ -135,7 +135,7 @@
                     </div>
                     <div class="p-6">
                         <div class="flex items-center space-x-2 mb-3">
-                            <span class="text-xs bg-brand-500/20 text-brand-400 px-3 py-1 rounded-full">{{ $article->brand->name }}</span>
+                            <span class="text-xs bg-brand-500/20 text-brand-400 px-3 py-1 rounded-full">{{ $article->carLogo->name ?? 'Générique' }}</span>
                             <span class="text-xs bg-white/10 text-white/60 px-3 py-1 rounded-full">{{ $article->category->name }}</span>
                         </div>
                         <h3 class="text-xl font-semibold mb-2 group-hover:text-brand-500 transition">{{ $article->name }}</h3>

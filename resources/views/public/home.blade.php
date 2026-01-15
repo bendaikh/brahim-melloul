@@ -143,7 +143,7 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <span class="text-2xl font-bold text-brand-500">{{ number_format($article->sale_price, 2, ',', ' ') }}</span>
-                                <span class="text-white/50 text-sm ml-1">DA</span>
+                                <span class="text-white/50 text-sm ml-1">MAD</span>
                             </div>
                             <a href="{{ route('article.show', $article->slug) }}" class="bg-white/10 hover:bg-brand-500 text-white px-5 py-2.5 rounded-xl font-medium transition">
                                 Détails
@@ -178,7 +178,7 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <span class="text-2xl font-bold text-brand-500">{{ number_format($product['price'], 2, ',', ' ') }}</span>
-                                    <span class="text-white/50 text-sm ml-1">DA</span>
+                                    <span class="text-white/50 text-sm ml-1">MAD</span>
                                 </div>
                                 <button class="bg-white/10 hover:bg-brand-500 text-white px-5 py-2.5 rounded-xl font-medium transition">
                                     Détails

@@ -9,25 +9,52 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Article extends Model
 {
     protected $fillable = [
-        'reference', 'oem_reference', 'name', 'slug', 'description', 
-        'brand_id', 'category_id', 'purchase_price', 'sale_price', 
-        'professional_price', 'stock_quantity', 'min_stock_level', 
-        'location', 'specifications', 'is_active'
+        'reference', 
+        'code',
+        'name', 
+        'slug', 
+        'description',
+        'image',
+        'classment',
+        'prix_brut',
+        'block',
+        'diametre',
+        'representant_prix',
+        'reference_equivalent',
+        'designation',
+        'category_id', 
+        'car_logo_id',
+        'representant_id',
+        'purchase_price', 
+        'sale_price', 
+        'professional_price', 
+        'stock_quantity', 
+        'min_stock_level', 
+        'location', 
+        'specifications', 
+        'is_active'
     ];
 
     protected $casts = [
         'specifications' => 'json',
         'is_active' => 'boolean',
+        'prix_brut' => 'decimal:2',
+        'representant_prix' => 'decimal:2',
     ];
-
-    public function brand(): BelongsTo
-    {
-        return $this->belongsTo(Brand::class);
-    }
 
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function carLogo(): BelongsTo
+    {
+        return $this->belongsTo(CarLogo::class);
+    }
+
+    public function representant(): BelongsTo
+    {
+        return $this->belongsTo(Representant::class);
     }
 
     public function stockMovements(): HasMany

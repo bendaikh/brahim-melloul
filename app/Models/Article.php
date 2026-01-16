@@ -23,11 +23,16 @@ class Article extends Model
         'reference_equivalent',
         'designation',
         'category_id', 
+        'brand_id',
         'car_logo_id',
         'representant_id',
         'purchase_price', 
         'sale_price', 
         'professional_price', 
+        'prix_brut',
+        'remise',
+        'prix_net',
+        'prix_achat',
         'stock_quantity', 
         'min_stock_level', 
         'location', 
@@ -37,14 +42,23 @@ class Article extends Model
 
     protected $casts = [
         'specifications' => 'json',
+        'designation' => 'array',
         'is_active' => 'boolean',
         'prix_brut' => 'decimal:2',
+        'remise' => 'decimal:2',
+        'prix_net' => 'decimal:2',
+        'prix_achat' => 'decimal:2',
         'representant_prix' => 'decimal:2',
     ];
 
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
     }
 
     public function carLogo(): BelongsTo

@@ -83,6 +83,21 @@
                         </select>
                     </div>
                 </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="brand_id" class="block text-sm font-medium text-white/70 mb-2">Marque</label>
+                        <select name="brand_id" id="brand_id"
+                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus:outline-none transition">
+                            <option value="">Sélectionner une marque</option>
+                            @foreach($brands as $brand)
+                                <option value="{{ $brand->id }}" {{ old('brand_id', $article->brand_id) == $brand->id ? 'selected' : '' }}>
+                                    {{ $brand->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <!-- Section: Image -->
@@ -139,11 +154,39 @@
                         placeholder="Référence équivalente">
                 </div>
 
-                <div>
-                    <label for="designation" class="block text-sm font-medium text-white/70 mb-2">Désignation</label>
-                    <textarea name="designation" id="designation" rows="3"
-                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:border-brand-500 focus:outline-none transition resize-none"
-                        placeholder="Désignation de l'article">{{ old('designation', $article->designation) }}</textarea>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-sm font-medium text-white/70">Désignations</label>
+                        <button type="button" onclick="addDesignation()" class="flex items-center space-x-1 text-brand-500 hover:text-brand-400 transition text-sm font-semibold">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            <span>Ajouter une désignation</span>
+                        </button>
+                    </div>
+                    <div id="designations-container" class="space-y-3">
+                        @php $designations = old('designations', $article->designation ?? []); @endphp
+                        @if(empty($designations))
+                            <div class="flex items-center gap-2">
+                                <input type="text" name="designations[]" 
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:border-brand-500 focus:outline-none transition"
+                                    placeholder="Désignation de l'article">
+                            </div>
+                        @else
+                            @foreach($designations as $des)
+                                <div class="flex items-center gap-2">
+                                    <input type="text" name="designations[]" value="{{ $des }}"
+                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:border-brand-500 focus:outline-none transition"
+                                        placeholder="Désignation de l'article">
+                                    <button type="button" onclick="this.parentElement.remove()" class="p-3 text-red-500 hover:bg-red-500/10 rounded-xl transition">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
                 </div>
             </div>
 
@@ -156,10 +199,43 @@
                         <div class="relative">
                             <input type="number" step="0.01" name="prix_brut" id="prix_brut" value="{{ old('prix_brut', $article->prix_brut) }}"
                                 class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:border-brand-500 focus:outline-none transition pr-16"
+                                placeholder="0.00" oninput="calculateNetPrice()">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-white/40">MAD</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="remise" class="block text-sm font-medium text-white/70 mb-2">Remise (%)</label>
+                        <div class="relative">
+                            <input type="number" step="0.01" name="remise" id="remise" value="{{ old('remise', $article->remise) }}"
+                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:border-brand-500 focus:outline-none transition pr-16"
+                                placeholder="0.00" oninput="calculateNetPrice()">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-white/40">%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="prix_net" class="block text-sm font-medium text-white/70 mb-2">Prix Net</label>
+                        <div class="relative">
+                            <input type="number" step="0.01" name="prix_net" id="prix_net" value="{{ old('prix_net', $article->prix_net) }}"
+                                class="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none transition pr-16"
+                                placeholder="0.00" readonly>
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-white/40">MAD</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="prix_achat" class="block text-sm font-medium text-white/70 mb-2">Prix d'Achat</label>
+                        <div class="relative">
+                            <input type="number" step="0.01" name="prix_achat" id="prix_achat" value="{{ old('prix_achat', $article->prix_achat) }}"
+                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:border-brand-500 focus:outline-none transition pr-16"
                                 placeholder="0.00">
                             <span class="absolute right-4 top-1/2 -translate-y-1/2 text-white/40">MAD</span>
                         </div>
                     </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="representant_prix" class="block text-sm font-medium text-white/70 mb-2">Prix Représentant</label>
                         <div class="relative">
@@ -216,5 +292,32 @@ function previewImage(input) {
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+function addDesignation() {
+    const container = document.getElementById('designations-container');
+    const div = document.createElement('div');
+    div.className = 'flex items-center gap-2';
+    div.innerHTML = `
+        <input type="text" name="designations[]" 
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:border-brand-500 focus:outline-none transition"
+            placeholder="Désignation de l'article">
+        <button type="button" onclick="this.parentElement.remove()" class="p-3 text-red-500 hover:bg-red-500/10 rounded-xl transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+        </button>
+    `;
+    container.appendChild(div);
+}
+
+function calculateNetPrice() {
+    const brut = parseFloat(document.getElementById('prix_brut').value) || 0;
+    const remise = parseFloat(document.getElementById('remise').value) || 0;
+    const net = brut * (1 - remise / 100);
+    document.getElementById('prix_net').value = net.toFixed(2);
+}
+
+// Calculate on load
+document.addEventListener('DOMContentLoaded', calculateNetPrice);
 </script>
 @endsection

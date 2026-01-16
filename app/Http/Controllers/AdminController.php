@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\Category;
+use App\Models\Brand;
 use App\Models\CarLogo;
 use App\Models\Representant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\File;
 
 class AdminController extends Controller
 {
@@ -17,6 +19,7 @@ class AdminController extends Controller
         $stats = [
             'articles_count' => Article::count(),
             'categories_count' => Category::count(),
+            'brands_count' => Brand::count(),
             'car_logos_count' => CarLogo::count(),
             'representants_count' => Representant::count(),
         ];
@@ -175,10 +178,97 @@ class AdminController extends Controller
             ->with('success', 'Logo de voiture supprimé avec succès.');
     }
 
+    // ==================== BRANDS (MARQUES) ====================
+    public function brandsIndex()
+    {
+        $brands = Brand::withCount('articles')->orderBy('name')->get();
+        return view('admin.parametres.marques.index', compact('brands'));
+    }
+
+    public function brandsCreate()
+    {
+        return view('admin.parametres.marques.create');
+    }
+
+    public function brandsStore(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:brands',
+            'description' => 'nullable|string',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        $data = [
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+            'description' => $request->description,
+        ];
+
+        if ($request->hasFile('logo')) {
+            $logo = $request->file('logo');
+            $logoName = Str::slug($request->name) . '-' . time() . '.' . $logo->extension();
+            $logo->move(public_path('uploads/brands'), $logoName);
+            $data['logo'] = 'uploads/brands/' . $logoName;
+        }
+
+        Brand::create($data);
+
+        return redirect()->route('admin.parametres.marques.index')
+            ->with('success', 'Marque créée avec succès.');
+    }
+
+    public function brandsEdit(Brand $brand)
+    {
+        return view('admin.parametres.marques.edit', compact('brand'));
+    }
+
+    public function brandsUpdate(Request $request, Brand $brand)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:brands,name,' . $brand->id,
+            'description' => 'nullable|string',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        $data = [
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+            'description' => $request->description,
+        ];
+
+        if ($request->hasFile('logo')) {
+            // Delete old logo
+            if ($brand->logo && file_exists(public_path($brand->logo))) {
+                unlink(public_path($brand->logo));
+            }
+            
+            $logo = $request->file('logo');
+            $logoName = Str::slug($request->name) . '-' . time() . '.' . $logo->extension();
+            $logo->move(public_path('uploads/brands'), $logoName);
+            $data['logo'] = 'uploads/brands/' . $logoName;
+        }
+
+        $brand->update($data);
+
+        return redirect()->route('admin.parametres.marques.index')
+            ->with('success', 'Marque mise à jour avec succès.');
+    }
+
+    public function brandsDestroy(Brand $brand)
+    {
+        if ($brand->logo && file_exists(public_path($brand->logo))) {
+            unlink(public_path($brand->logo));
+        }
+        $brand->delete();
+        
+        return redirect()->route('admin.parametres.marques.index')
+            ->with('success', 'Marque supprimée avec succès.');
+    }
+
     // ==================== ARTICLES ====================
     public function articlesIndex()
     {
-        $articles = Article::with(['category', 'carLogo', 'representant'])
+        $articles = Article::with(['category', 'brand', 'carLogo', 'representant'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
         return view('admin.articles.index', compact('articles'));
@@ -187,10 +277,11 @@ class AdminController extends Controller
     public function articlesCreate()
     {
         $categories = Category::orderBy('name')->get();
+        $brands = Brand::orderBy('name')->get();
         $carLogos = CarLogo::where('is_active', true)->orderBy('name')->get();
         $representants = Representant::where('is_active', true)->orderBy('name')->get();
         
-        return view('admin.articles.create', compact('categories', 'carLogos', 'representants'));
+        return view('admin.articles.create', compact('categories', 'brands', 'carLogos', 'representants'));
     }
 
     public function articlesStore(Request $request)
@@ -200,19 +291,25 @@ class AdminController extends Controller
             'code' => 'nullable|string|max:255',
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
             'car_logo_id' => 'nullable|exists:car_logos,id',
             'representant_id' => 'nullable|exists:representants,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'classment' => 'nullable|string|max:255',
             'prix_brut' => 'nullable|numeric|min:0',
+            'remise' => 'nullable|numeric|min:0|max:100',
+            'prix_net' => 'nullable|numeric|min:0',
+            'prix_achat' => 'nullable|numeric|min:0',
             'block' => 'nullable|string|max:255',
             'diametre' => 'nullable|string|max:255',
             'representant_prix' => 'nullable|numeric|min:0',
             'reference_equivalent' => 'nullable|string|max:255',
-            'designation' => 'nullable|string',
+            'designations' => 'nullable|array',
+            'designations.*' => 'nullable|string',
         ]);
 
-        $data = $request->except('image');
+        $data = $request->except(['image', 'designations']);
+        $data['designation'] = array_filter($request->designations ?? []);
         $data['slug'] = Str::slug($request->name . '-' . $request->reference);
         $data['is_active'] = true;
 
@@ -232,10 +329,11 @@ class AdminController extends Controller
     public function articlesEdit(Article $article)
     {
         $categories = Category::orderBy('name')->get();
+        $brands = Brand::orderBy('name')->get();
         $carLogos = CarLogo::where('is_active', true)->orderBy('name')->get();
         $representants = Representant::where('is_active', true)->orderBy('name')->get();
         
-        return view('admin.articles.edit', compact('article', 'categories', 'carLogos', 'representants'));
+        return view('admin.articles.edit', compact('article', 'categories', 'brands', 'carLogos', 'representants'));
     }
 
     public function articlesUpdate(Request $request, Article $article)
@@ -245,19 +343,25 @@ class AdminController extends Controller
             'code' => 'nullable|string|max:255',
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
             'car_logo_id' => 'nullable|exists:car_logos,id',
             'representant_id' => 'nullable|exists:representants,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'classment' => 'nullable|string|max:255',
             'prix_brut' => 'nullable|numeric|min:0',
+            'remise' => 'nullable|numeric|min:0|max:100',
+            'prix_net' => 'nullable|numeric|min:0',
+            'prix_achat' => 'nullable|numeric|min:0',
             'block' => 'nullable|string|max:255',
             'diametre' => 'nullable|string|max:255',
             'representant_prix' => 'nullable|numeric|min:0',
             'reference_equivalent' => 'nullable|string|max:255',
-            'designation' => 'nullable|string',
+            'designations' => 'nullable|array',
+            'designations.*' => 'nullable|string',
         ]);
 
-        $data = $request->except('image');
+        $data = $request->except(['image', 'designations']);
+        $data['designation'] = array_filter($request->designations ?? []);
         $data['slug'] = Str::slug($request->name . '-' . $request->reference);
 
         if ($request->hasFile('image')) {

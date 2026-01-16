@@ -52,4 +52,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/parametres/car-logos/{carLogo}/edit', [AdminController::class, 'carLogosEdit'])->name('parametres.car-logos.edit');
     Route::put('/parametres/car-logos/{carLogo}', [AdminController::class, 'carLogosUpdate'])->name('parametres.car-logos.update');
     Route::delete('/parametres/car-logos/{carLogo}', [AdminController::class, 'carLogosDestroy'])->name('parametres.car-logos.destroy');
+
+    // Parametres - Marques (Brands)
+    Route::get('/parametres/marques', [AdminController::class, 'brandsIndex'])->name('parametres.marques.index');
+    Route::get('/parametres/marques/create', [AdminController::class, 'brandsCreate'])->name('parametres.marques.create');
+    Route::post('/parametres/marques', [AdminController::class, 'brandsStore'])->name('parametres.marques.store');
+    Route::get('/parametres/marques/{brand}/edit', [AdminController::class, 'brandsEdit'])->name('parametres.marques.edit');
+    Route::put('/parametres/marques/{brand}', [AdminController::class, 'brandsUpdate'])->name('parametres.marques.update');
+    Route::delete('/parametres/marques/{brand}', [AdminController::class, 'brandsDestroy'])->name('parametres.marques.destroy');
 });

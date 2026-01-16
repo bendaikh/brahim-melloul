@@ -71,16 +71,27 @@
                                 {{ $article->category->name ?? '-' }}
                             </td>
                             <td class="px-6 py-4">
-                                @if($article->carLogo)
-                                    <div class="flex items-center space-x-2">
-                                        @if($article->carLogo->image)
-                                            <img src="{{ asset($article->carLogo->image) }}" alt="{{ $article->carLogo->name }}" class="w-6 h-6 object-contain">
-                                        @endif
-                                        <span class="text-white/60">{{ $article->carLogo->name }}</span>
-                                    </div>
-                                @else
-                                    <span class="text-white/40">-</span>
-                                @endif
+                                <div class="flex flex-col space-y-1">
+                                    @if($article->brand)
+                                        <div class="flex items-center space-x-2">
+                                            @if($article->brand->logo)
+                                                <img src="{{ asset($article->brand->logo) }}" alt="{{ $article->brand->name }}" class="w-6 h-6 object-contain rounded bg-white/5 p-0.5">
+                                            @endif
+                                            <span class="text-white font-medium">{{ $article->brand->name }}</span>
+                                        </div>
+                                    @endif
+                                    @if($article->carLogo)
+                                        <div class="flex items-center space-x-2">
+                                            @if($article->carLogo->image)
+                                                <img src="{{ asset($article->carLogo->image) }}" alt="{{ $article->carLogo->name }}" class="w-4 h-4 object-contain">
+                                            @endif
+                                            <span class="text-white/40 text-xs">{{ $article->carLogo->name }}</span>
+                                        </div>
+                                    @endif
+                                    @if(!$article->brand && !$article->carLogo)
+                                        <span class="text-white/40">-</span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-6 py-4">
                                 <span class="font-semibold">{{ number_format($article->prix_brut, 2, ',', ' ') }}</span>

@@ -37,6 +37,14 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('/representants/{representant}', [AdminController::class, 'representantsUpdate'])->name('representants.update');
     Route::delete('/representants/{representant}', [AdminController::class, 'representantsDestroy'])->name('representants.destroy');
     
+    // Clients
+    Route::get('/clients', [AdminController::class, 'clientsIndex'])->name('clients.index');
+    Route::get('/clients/create', [AdminController::class, 'clientsCreate'])->name('clients.create');
+    Route::post('/clients', [AdminController::class, 'clientsStore'])->name('clients.store');
+    Route::get('/clients/{client}/edit', [AdminController::class, 'clientsEdit'])->name('clients.edit');
+    Route::put('/clients/{client}', [AdminController::class, 'clientsUpdate'])->name('clients.update');
+    Route::delete('/clients/{client}', [AdminController::class, 'clientsDestroy'])->name('clients.destroy');
+    
     // Parametres - Categories
     Route::get('/parametres/categories', [AdminController::class, 'categoriesIndex'])->name('parametres.categories.index');
     Route::get('/parametres/categories/create', [AdminController::class, 'categoriesCreate'])->name('parametres.categories.create');

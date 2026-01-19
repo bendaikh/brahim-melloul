@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Brand;
 use App\Models\CarLogo;
 use App\Models\Representant;
+use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
@@ -463,5 +464,87 @@ class AdminController extends Controller
         $representant->delete();
         return redirect()->route('admin.representants.index')
             ->with('success', 'Représentant supprimé avec succès.');
+    }
+
+    // ==================== CLIENTS ====================
+    public function clientsIndex()
+    {
+        $clients = Client::with('representant')->orderBy('nom_client')->get();
+        return view('admin.clients.index', compact('clients'));
+    }
+
+    public function clientsCreate()
+    {
+        $representants = Representant::where('is_active', true)->orderBy('name')->get();
+        return view('admin.clients.create', compact('representants'));
+    }
+
+    public function clientsStore(Request $request)
+    {
+        $request->validate([
+            'nom_client' => 'required|string|max:255',
+            'numero_client' => 'required|string|max:255|unique:clients',
+            'telephone' => 'nullable|string|max:255',
+            'ville' => 'nullable|string|max:255',
+            'region' => 'nullable|string|max:255',
+            'representant_id' => 'nullable|exists:representants,id',
+            'ice' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+        ]);
+
+        Client::create([
+            'nom_client' => $request->nom_client,
+            'numero_client' => $request->numero_client,
+            'telephone' => $request->telephone,
+            'ville' => $request->ville,
+            'region' => $request->region,
+            'representant_id' => $request->representant_id,
+            'ice' => $request->ice,
+            'address' => $request->address,
+        ]);
+
+        return redirect()->route('admin.clients.index')
+            ->with('success', 'Client créé avec succès.');
+    }
+
+    public function clientsEdit(Client $client)
+    {
+        $representants = Representant::where('is_active', true)->orderBy('name')->get();
+        return view('admin.clients.edit', compact('client', 'representants'));
+    }
+
+    public function clientsUpdate(Request $request, Client $client)
+    {
+        $request->validate([
+            'nom_client' => 'required|string|max:255',
+            'numero_client' => 'required|string|max:255|unique:clients,numero_client,' . $client->id,
+            'telephone' => 'nullable|string|max:255',
+            'ville' => 'nullable|string|max:255',
+            'region' => 'nullable|string|max:255',
+            'representant_id' => 'nullable|exists:representants,id',
+            'ice' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+        ]);
+
+        $client->update([
+            'nom_client' => $request->nom_client,
+            'numero_client' => $request->numero_client,
+            'telephone' => $request->telephone,
+            'ville' => $request->ville,
+            'region' => $request->region,
+            'representant_id' => $request->representant_id,
+            'ice' => $request->ice,
+            'address' => $request->address,
+        ]);
+
+        return redirect()->route('admin.clients.index')
+            ->with('success', 'Client mis à jour avec succès.');
+    }
+
+    public function clientsDestroy(Client $client)
+    {
+        $client->delete();
+        return redirect()->route('admin.clients.index')
+            ->with('success', 'Client supprimé avec succès.');
     }
 }

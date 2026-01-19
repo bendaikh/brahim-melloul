@@ -18,4 +18,9 @@ class Representant extends Model
     {
         return $this->hasMany(Article::class);
     }
+
+    public function clients(): HasMany
+    {
+        return $this->hasMany(Client::class);
+    }
 }

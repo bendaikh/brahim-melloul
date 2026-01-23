@@ -1,8 +1,7 @@
 @extends('admin.layouts.admin')
 
 @section('title', 'Nouveau représentant')
-@section('page-title', 'Nouveau représentant')
-@section('page-description', 'Ajouter un nouveau représentant commercial')
+@section('breadcrumb-title', 'Commerciaux')
 
 @section('content')
 <div class="max-w-2xl">

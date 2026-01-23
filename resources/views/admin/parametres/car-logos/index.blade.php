@@ -1,8 +1,7 @@
 @extends('admin.layouts.admin')
 
 @section('title', 'Logo de voiture')
-@section('page-title', 'Logo de voiture')
-@section('page-description', 'Gérez les logos des marques de voitures')
+@section('breadcrumb-title', 'Logos Voitures')
 
 @section('content')
 <div class="space-y-6">

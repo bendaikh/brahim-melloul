@@ -21,6 +21,10 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Dashboard
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
     
+    // AJAX Module API Routes (for SPA dashboard)
+    Route::get('/modules/{module}/form', [AdminController::class, 'getModuleForm']);
+    Route::get('/modules/{module}/list', [AdminController::class, 'getModuleList']);
+    
     // Articles
     Route::get('/articles', [AdminController::class, 'articlesIndex'])->name('articles.index');
     Route::get('/articles/create', [AdminController::class, 'articlesCreate'])->name('articles.create');

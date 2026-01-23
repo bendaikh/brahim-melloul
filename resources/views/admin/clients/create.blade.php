@@ -1,8 +1,7 @@
 @extends('admin.layouts.admin')
 
 @section('title', 'Nouveau client')
-@section('page-title', 'Nouveau client')
-@section('page-description', 'Ajouter un nouveau client')
+@section('breadcrumb-title', 'Clients')
 
 @section('content')
 <div class="max-w-2xl">

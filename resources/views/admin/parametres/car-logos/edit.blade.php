@@ -1,8 +1,7 @@
 @extends('admin.layouts.admin')
 
 @section('title', 'Modifier le logo')
-@section('page-title', 'Modifier le logo')
-@section('page-description', 'Modifier les informations du logo')
+@section('breadcrumb-title', 'Logos Voitures')
 
 @section('content')
 <div class="max-w-2xl">

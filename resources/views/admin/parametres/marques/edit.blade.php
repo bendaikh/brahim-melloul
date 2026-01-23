@@ -1,8 +1,7 @@
 @extends('admin.layouts.admin')
 
 @section('title', 'Modifier la marque')
-@section('page-title', 'Modifier la marque')
-@section('page-description', 'Modifier les informations de la marque ' . $brand->name)
+@section('breadcrumb-title', 'Marques')
 
 @section('content')
 <div class="max-w-2xl">

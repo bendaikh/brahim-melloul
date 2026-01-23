@@ -1,161 +1,933 @@
-@extends('admin.layouts.admin')
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Tableau de bord - AutoPart Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-@section('title', 'Tableau de bord')
-@section('page-title', 'Tableau de Bord')
-@section('page-description', 'Bienvenue, voici un aperçu de votre activité')
+        html, body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eceff1;
+            height: 100%;
+            overflow: hidden;
+        }
 
-@section('content')
-<!-- Stats Cards -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="card-stat bg-gradient-to-br from-dark-800 to-dark-700 rounded-2xl p-6 border border-white/10">
-        <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                </svg>
+        .dashboard-wrapper {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+            background-color: #eceff1;
+        }
+
+        /* ===== SIDEBAR STYLES ===== */
+        .sidebar {
+            width: 220px;
+            background: linear-gradient(180deg, #465a6d 0%, #3a4f5e 100%);
+            color: white;
+            overflow-y: auto;
+            padding-top: 0;
+            border-right: 1px solid #2a3a4e;
+            flex-shrink: 0;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-section {
+            padding: 4px 0;
+            margin: 12px 0;
+        }
+
+        .sidebar-section:first-child {
+            margin-top: 0;
+        }
+
+        .sidebar-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #8b95a4;
+            padding: 12px 16px 8px 16px;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-link {
+            display: block;
+            width: 100%;
+            padding: 10px 16px;
+            font-size: 12px;
+            color: #d0d6dc;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            border: none;
+            background: none;
+            text-align: left;
+            font-family: inherit;
+        }
+
+        .sidebar-link:hover:not(:disabled) {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            border-left-color: #7a92a4;
+        }
+
+        .sidebar-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border-left-color: #a8c5d8;
+        }
+
+        .sidebar-link:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .sidebar-icon {
+            display: inline-block;
+            width: 14px;
+            margin-right: 8px;
+            text-align: center;
+        }
+
+        /* ===== CONTENT AREA ===== */
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #eceff1;
+        }
+
+        /* ===== BREADCRUMB BAR ===== */
+        .breadcrumb-bar {
+            background-color: #ffffff;
+            border-bottom: 1px solid #dee2e6;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .breadcrumb-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .breadcrumb-home {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #465a6d;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .breadcrumb-home:hover {
+            background-color: #f0f0f0;
+            color: #2a3a4e;
+        }
+
+        .breadcrumb-separator {
+            color: #bbb;
+            margin: 0 4px;
+        }
+
+        .breadcrumb-title {
+            color: #465a6d;
+            font-weight: 600;
+        }
+
+        /* ===== MODULE CONTENT ===== */
+        #module-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* ===== DASHBOARD CARDS ===== */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .dashboard-card {
+            background: linear-gradient(135deg, #546b7a 0%, #465a6d 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #5d7c8f 0%, #4d6a7e 100%);
+        }
+
+        .card-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            opacity: 0.95;
+        }
+
+        .card-title {
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.4;
+            letter-spacing: 0.3px;
+        }
+
+        /* ===== FORMS & CONTENT ===== */
+        .form-container {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .form-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .form-tab {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+            margin-bottom: -2px;
+        }
+
+        .form-tab:hover {
+            color: #465a6d;
+        }
+
+        .form-tab.active {
+            color: #465a6d;
+            border-bottom-color: #465a6d;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #465a6d;
+            box-shadow: 0 0 0 2px rgba(70, 90, 109, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: #465a6d;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #3a4f5e;
+        }
+
+        .btn-secondary {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d0d0d0;
+        }
+
+        /* ===== LOADING SPINNER ===== */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #465a6d;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1400px) {
+            .card-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .card-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-wrapper {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                max-height: 150px;
+                border-right: none;
+                border-bottom: 1px solid #2a3a4e;
+                overflow-x: auto;
+                overflow-y: hidden;
+                display: flex;
+            }
+
+            .sidebar-section {
+                flex-shrink: 0;
+                margin: 0;
+                padding-right: 24px;
+            }
+
+            .card-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- ===== SIDEBAR ===== -->
+        <div class="sidebar">
+            <!-- 📦 STOCK -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">📦 Stock</div>
+                <button class="sidebar-link module-link" data-module="articles" data-title="Articles">
+                    <span class="sidebar-icon"><i class="fas fa-list"></i></span>
+                    Articles
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-link"></i></span>
+                    Références
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-boxes"></i></span>
+                    Inventaire
+                </button>
             </div>
-            <span class="text-xs text-brand-400 bg-brand-400/10 px-2 py-1 rounded-full">Total</span>
-        </div>
-        <div class="text-white/50 text-sm mb-1">Articles</div>
-        <div class="text-2xl font-bold">{{ $stats['articles_count'] ?? 0 }}</div>
-    </div>
 
-    <div class="card-stat bg-gradient-to-br from-dark-800 to-dark-700 rounded-2xl p-6 border border-white/10">
-        <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
-                <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                </svg>
+            <!-- 🚚 VENTES / ACHATS (DOCUMENTS) -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">🚚 Documents</div>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-box"></i></span>
+                    List bons livraison
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-shopping-cart"></i></span>
+                    List bons Commandes
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-shopping-cart"></i></span>
+                    List Bon Achat
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-receipt"></i></span>
+                    List des Factures
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-file"></i></span>
+                    Facture
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-file"></i></span>
+                    Facture achat
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-arrow-left"></i></span>
+                    List bons retour
+                </button>
             </div>
-            <span class="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full">Actif</span>
-        </div>
-        <div class="text-white/50 text-sm mb-1">Catégories</div>
-        <div class="text-2xl font-bold">{{ $stats['categories_count'] ?? 0 }}</div>
-    </div>
 
-    <div class="card-stat bg-gradient-to-br from-dark-800 to-dark-700 rounded-2xl p-6 border border-white/10">
-        <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
-                <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
-                </svg>
+            <!-- ↩️ AVOIRS -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">↩️ Avoirs</div>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-clipboard"></i></span>
+                    List Avoir clients
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-clipboard"></i></span>
+                    Avoir Fournisseurs
+                </button>
             </div>
-            <span class="text-xs text-yellow-400 bg-yellow-400/10 px-2 py-1 rounded-full">Marques</span>
-        </div>
-        <div class="text-white/50 text-sm mb-1">Logos de voiture</div>
-        <div class="text-2xl font-bold">{{ $stats['car_logos_count'] ?? 0 }}</div>
-    </div>
 
-    <div class="card-stat bg-gradient-to-br from-dark-800 to-dark-700 rounded-2xl p-6 border border-white/10">
-        <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
+            <!-- 💰 RÈGLEMENTS -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">💰 Règlements</div>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-money-bill"></i></span>
+                    Reglement clients
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-money-bill"></i></span>
+                    Reglement Fournisseur
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-money-bill"></i></span>
+                    Reglement FC
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-money-bill"></i></span>
+                    Reglements Factures
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-piggy-bank"></i></span>
+                    Bank
+                </button>
             </div>
-            <span class="text-xs text-purple-400 bg-purple-400/10 px-2 py-1 rounded-full">Équipe</span>
-        </div>
-        <div class="text-white/50 text-sm mb-1">Représentants</div>
-        <div class="text-2xl font-bold">{{ $stats['representants_count'] ?? 0 }}</div>
-    </div>
-</div>
 
-<!-- Quick Actions & Recent Activity -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Quick Actions -->
-    <div class="bg-dark-800 rounded-2xl border border-white/10 p-6">
-        <h2 class="text-lg font-semibold mb-6">Actions Rapides</h2>
-        <div class="space-y-3">
-            <a href="{{ route('admin.articles.create') }}" class="w-full flex items-center space-x-3 p-4 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/30 rounded-xl transition group">
-                <div class="w-10 h-10 bg-brand-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                    </svg>
-                </div>
-                <span class="font-medium">Nouvel article</span>
-            </a>
-            <a href="{{ route('admin.parametres.categories.create') }}" class="w-full flex items-center space-x-3 p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition group">
-                <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                    </svg>
-                </div>
-                <span class="font-medium">Nouvelle catégorie</span>
-            </a>
-            <a href="{{ route('admin.parametres.car-logos.create') }}" class="w-full flex items-center space-x-3 p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition group">
-                <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
-                    </svg>
-                </div>
-                <span class="font-medium">Nouveau logo</span>
-            </a>
-            <a href="{{ route('admin.representants.create') }}" class="w-full flex items-center space-x-3 p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition group">
-                <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                    </svg>
-                </div>
-                <span class="font-medium">Nouveau représentant</span>
-            </a>
-        </div>
-    </div>
+            <!-- 👥 PARTENAIRES -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">👥 Partenaires</div>
+                <button class="sidebar-link module-link" data-module="clients" data-title="Clients">
+                    <span class="sidebar-icon"><i class="fas fa-users"></i></span>
+                    Clients
+                </button>
+                <button class="sidebar-link module-link" data-module="suppliers" data-title="Fournisseurs">
+                    <span class="sidebar-icon"><i class="fas fa-truck"></i></span>
+                    Fournisseurs
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-user-tie"></i></span>
+                    List des commerciaux
+                </button>
+                <button class="sidebar-link module-link" data-module="representants" data-title="Representants">
+                    <span class="sidebar-icon"><i class="fas fa-users"></i></span>
+                    Representants
+                </button>
+            </div>
 
-    <!-- Navigation Rapide -->
-    <div class="lg:col-span-2 bg-dark-800 rounded-2xl border border-white/10 p-6">
-        <h2 class="text-lg font-semibold mb-6">Navigation Rapide</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <a href="{{ route('admin.articles.index') }}" class="p-4 bg-white/5 hover:bg-brand-500/10 border border-white/10 hover:border-brand-500/30 rounded-xl text-center transition group">
-                <div class="w-12 h-12 bg-brand-500/20 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition">
-                    <svg class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                    </svg>
-                </div>
-                <span class="text-sm font-medium">Articles</span>
-            </a>
-            <a href="{{ route('admin.representants.index') }}" class="p-4 bg-white/5 hover:bg-brand-500/10 border border-white/10 hover:border-brand-500/30 rounded-xl text-center transition group">
-                <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition">
-                    <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                </div>
-                <span class="text-sm font-medium">Représentants</span>
-            </a>
-            <a href="{{ route('admin.parametres.categories.index') }}" class="p-4 bg-white/5 hover:bg-brand-500/10 border border-white/10 hover:border-brand-500/30 rounded-xl text-center transition group">
-                <div class="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition">
-                    <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                    </svg>
-                </div>
-                <span class="text-sm font-medium">Catégories</span>
-            </a>
-            <a href="{{ route('admin.parametres.car-logos.index') }}" class="p-4 bg-white/5 hover:bg-brand-500/10 border border-white/10 hover:border-brand-500/30 rounded-xl text-center transition group">
-                <div class="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition">
-                    <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
-                    </svg>
-                </div>
-                <span class="text-sm font-medium">Logos</span>
-            </a>
-        </div>
+            <!-- 📊 SUIVI / ÉTATS -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">📊 Suivi</div>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-clock"></i></span>
+                    Echeances
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-user"></i></span>
+                    Situation Client
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-users"></i></span>
+                    Situation Fournisseurs
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-clipboard"></i></span>
+                    Etat BL
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-file"></i></span>
+                    Etat BL/FC
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-user"></i></span>
+                    Etat Client FC
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-chart-bar"></i></span>
+                    Reliquat
+                </button>
+            </div>
 
-        <!-- Info Section -->
-        <div class="mt-6 p-4 bg-brand-500/10 border border-brand-500/30 rounded-xl">
-            <div class="flex items-start space-x-3">
-                <div class="w-8 h-8 bg-brand-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="font-semibold text-sm text-brand-400 mb-1">Bienvenue dans votre espace d'administration</h3>
-                    <p class="text-xs text-white/60">Utilisez le menu latéral pour naviguer entre les différentes sections. Commencez par créer des catégories et des logos de voiture avant d'ajouter des articles.</p>
-                </div>
+            <!-- 📈 JOURNAUX & RAPPORTS -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">📈 Journaux</div>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-arrow-up-down"></i></span>
+                    Journal ventes
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-arrow-up-down"></i></span>
+                    Journal Achat
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-arrow-up-down"></i></span>
+                    Journal Vente FC
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-arrow-up-down"></i></span>
+                    Journal Achat FC
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-chart-bar"></i></span>
+                    Rapport
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-pen"></i></span>
+                    Etude
+                </button>
+            </div>
+
+            <!-- 📚 CATALOGUE -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">📚 Catalogue</div>
+                <button class="sidebar-link module-link" data-module="catalog" data-title="Catalog">
+                    <span class="sidebar-icon"><i class="fas fa-th"></i></span>
+                    Catalog
+                </button>
+                <button class="sidebar-link module-link" data-module="categories" data-title="Catégories">
+                    <span class="sidebar-icon"><i class="fas fa-tags"></i></span>
+                    Categories
+                </button>
+                <button class="sidebar-link module-link" data-module="brands" data-title="Marques">
+                    <span class="sidebar-icon"><i class="fas fa-star"></i></span>
+                    Marques
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-gift"></i></span>
+                    Promotions
+                </button>
+            </div>
+
+            <!-- ⚙️ SYSTÈME -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">⚙️ Système</div>
+                <button class="sidebar-link module-link" data-module="sales-logo" data-title="Logo Ventes">
+                    <span class="sidebar-icon"><i class="fas fa-cog"></i></span>
+                    Logo ventes
+                </button>
+                <button class="sidebar-link" disabled>
+                    <span class="sidebar-icon"><i class="fas fa-link"></i></span>
+                    Connecté
+                </button>
             </div>
         </div>
+
+        <!-- ===== CONTENT AREA ===== -->
+        <div class="content-area">
+            <!-- ===== BREADCRUMB BAR ===== -->
+            <div class="breadcrumb-bar">
+                <div class="breadcrumb-content">
+                    <button class="breadcrumb-home" id="homeBtn" title="Retour au tableau de bord">
+                        <i class="fas fa-home"></i>
+                    </button>
+                    <span class="breadcrumb-separator" id="separatorDisplay">/</span>
+                    <span class="breadcrumb-title" id="breadcrumbTitle">Accueil</span>
+                </div>
+            </div>
+
+            <!-- ===== DYNAMIC MODULE CONTENT ===== -->
+            <div id="module-content"></div>
+        </div>
     </div>
-</div>
-@endsection
+
+    <script>
+        const app = {
+            currentModule: null,
+
+            init() {
+                this.showDashboardCards();
+                this.setupEventListeners();
+            },
+
+            setupEventListeners() {
+                // Home button - returns to dashboard
+                document.getElementById('homeBtn').addEventListener('click', () => this.showDashboardCards());
+
+                // Sidebar module links
+                document.querySelectorAll('.module-link').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const module = e.currentTarget.dataset.module;
+                        const title = e.currentTarget.dataset.title;
+                        this.loadModule(module, title);
+                    });
+                });
+
+                // Dashboard cards
+                document.querySelectorAll('.dashboard-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        const module = e.currentTarget.dataset.module;
+                        const action = e.currentTarget.dataset.action;
+                        
+                        if (module) {
+                            const sectionMap = {
+                                'articles': 'Articles',
+                                'clients': 'Clients',
+                                'representants': 'Representants',
+                                'suppliers': 'Fournisseurs',
+                                'categories': 'Catégories',
+                                'brands': 'Marques'
+                            };
+                            
+                            if (action === 'list') {
+                                this.getModuleList(module, sectionMap[module]);
+                            } else {
+                                this.loadModule(module, sectionMap[module]);
+                            }
+                        }
+                    });
+                });
+            },
+
+            showDashboardCards() {
+                this.currentModule = null;
+                const content = document.getElementById('module-content');
+
+                // Update breadcrumb - ONLY show home
+                document.getElementById('breadcrumbTitle').textContent = 'Accueil';
+                document.getElementById('separatorDisplay').style.display = 'none';
+
+                // Clear active state from sidebar
+                document.querySelectorAll('.module-link').forEach(link => link.classList.remove('active'));
+
+                // Display dashboard cards
+                content.innerHTML = `
+                    <!-- ROW 1 -->
+                    <div class="card-grid">
+                        <button class="dashboard-card" data-module="articles" data-action="list">
+                            <div class="card-icon"><i class="fas fa-list"></i></div>
+                            <div class="card-title">Articles</div>
+                        </button>
+                        <button class="dashboard-card" data-module="clients" data-action="list">
+                            <div class="card-icon"><i class="fas fa-users"></i></div>
+                            <div class="card-title">CLIENTS</div>
+                        </button>
+                        <button class="dashboard-card" data-module="suppliers" data-action="list">
+                            <div class="card-icon"><i class="fas fa-users"></i></div>
+                            <div class="card-title">Fournisseur</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-money-bill"></i></div>
+                            <div class="card-title">Reglements</div>
+                        </button>
+                        <button class="dashboard-card" data-module="representants" data-action="list">
+                            <div class="card-icon"><i class="fas fa-users"></i></div>
+                            <div class="card-title">Representants</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-shopping-cart"></i></div>
+                            <div class="card-title">Panier</div>
+                        </button>
+                    </div>
+
+                    <!-- ROW 2 -->
+                    <div class="card-grid">
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-box"></i></div>
+                            <div class="card-title">List Bon livraison</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-shopping-cart"></i></div>
+                            <div class="card-title">List Bon commande</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-shopping-cart"></i></div>
+                            <div class="card-title">List Bon Achat</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-clipboard"></i></div>
+                            <div class="card-title">List Avoir client</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-clipboard"></i></div>
+                            <div class="card-title">List Avoir Fournisseur</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-chart-bar"></i></div>
+                            <div class="card-title">Reliquat</div>
+                        </button>
+                    </div>
+
+                    <!-- ROW 3 -->
+                    <div class="card-grid">
+                        <button class="dashboard-card" data-module="articles" data-action="add">
+                            <div class="card-icon"><i class="fas fa-plus"></i></div>
+                            <div class="card-title">Article +</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-plus"></i></div>
+                            <div class="card-title">Bon Livraison +</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-plus"></i></div>
+                            <div class="card-title">Avoir Client +</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-plus"></i></div>
+                            <div class="card-title">Bon Achat +</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-link"></i></div>
+                            <div class="card-title">Connecter</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-clock"></i></div>
+                            <div class="card-title">Echeances</div>
+                        </button>
+                    </div>
+
+                    <!-- ROW 4 -->
+                    <div class="card-grid">
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-user"></i></div>
+                            <div class="card-title">Situation Client</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-arrow-up-down"></i></div>
+                            <div class="card-title">Journal Achat</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-arrow-up-down"></i></div>
+                            <div class="card-title">Journal ventes</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-users"></i></div>
+                            <div class="card-title">Situation Fournisseurs</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-money-bill"></i></div>
+                            <div class="card-title">Reglements Fournisseurs</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-clipboard"></i></div>
+                            <div class="card-title">Etat bl</div>
+                        </button>
+                    </div>
+
+                    <!-- ROW 5 -->
+                    <div class="card-grid">
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-chart-bar"></i></div>
+                            <div class="card-title">Rapport</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-pen"></i></div>
+                            <div class="card-title">Etude</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-file"></i></div>
+                            <div class="card-title">Etat BL/FC</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-money-bill"></i></div>
+                            <div class="card-title">Bank</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-receipt"></i></div>
+                            <div class="card-title">Facture achat</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-boxes"></i></div>
+                            <div class="card-title">INVENTAIRE</div>
+                        </button>
+                    </div>
+
+                    <!-- ROW 6 -->
+                    <div class="card-grid">
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-receipt"></i></div>
+                            <div class="card-title">List Factures</div>
+                        </button>
+                        <button class="dashboard-card" data-module="articles" data-action="add">
+                            <div class="card-icon"><i class="fas fa-plus"></i></div>
+                            <div class="card-title">Facture +</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-money-bill"></i></div>
+                            <div class="card-title">Reglements Factures</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-arrow-up-down"></i></div>
+                            <div class="card-title">Journal Vente FC</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-arrow-up-down"></i></div>
+                            <div class="card-title">Journal Achat FC</div>
+                        </button>
+                        <button class="dashboard-card">
+                            <div class="card-icon"><i class="fas fa-user"></i></div>
+                            <div class="card-title">Etat Client FC</div>
+                        </button>
+                    </div>
+                `;
+
+                this.setupEventListeners();
+            },
+
+            async loadModule(module, sectionTitle) {
+                // Replace current module (not stack)
+                this.currentModule = module;
+                const content = document.getElementById('module-content');
+
+                // Update breadcrumb to show ONLY current section (no stacking)
+                document.getElementById('breadcrumbTitle').textContent = sectionTitle;
+                document.getElementById('separatorDisplay').style.display = 'inline';
+
+                // Show loading spinner
+                content.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+                try {
+                    const response = await fetch(`/admin/modules/${module}/form`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                    const data = await response.json();
+                    content.innerHTML = data.html || '<p>Contenu non disponible</p>';
+
+                    // Update sidebar active state
+                    document.querySelectorAll('.module-link').forEach(link => {
+                        link.classList.remove('active');
+                        if (link.dataset.module === module) {
+                            link.classList.add('active');
+                        }
+                    });
+
+                    // Re-attach event listeners for any new interactive elements
+                    this.setupEventListeners();
+                } catch (error) {
+                    console.error('Error loading module:', error);
+                    content.innerHTML = '<p style="color: red;">Erreur lors du chargement du contenu</p>';
+                }
+            },
+
+            async getModuleList(module, sectionTitle) {
+                this.currentModule = module;
+                const content = document.getElementById('module-content');
+
+                // Update breadcrumb
+                document.getElementById('breadcrumbTitle').textContent = sectionTitle || module;
+                document.getElementById('separatorDisplay').style.display = 'inline';
+
+                // Show loading spinner
+                content.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+                try {
+                    const response = await fetch(`/admin/modules/${module}/list`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                    const data = await response.json();
+                    content.innerHTML = data.html || '<p>Aucun élément trouvé</p>';
+
+                    // Update sidebar active state
+                    document.querySelectorAll('.module-link').forEach(link => {
+                        link.classList.remove('active');
+                        if (link.dataset.module === module) {
+                            link.classList.add('active');
+                        }
+                    });
+
+                    this.setupEventListeners();
+                } catch (error) {
+                    console.error('Error loading list:', error);
+                    content.innerHTML = '<p style="color: red;">Erreur lors du chargement</p>';
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>

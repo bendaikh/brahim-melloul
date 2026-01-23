@@ -1,8 +1,7 @@
 @extends('admin.layouts.admin')
 
 @section('title', 'Représentants')
-@section('page-title', 'Représentants')
-@section('page-description', 'Gérez vos représentants commerciaux')
+@section('breadcrumb-title', 'Commerciaux')
 
 @section('content')
 <div class="space-y-6">

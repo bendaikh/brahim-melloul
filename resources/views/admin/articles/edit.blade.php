@@ -1,8 +1,7 @@
 @extends('admin.layouts.admin')
 
 @section('title', 'Modifier l\'article')
-@section('page-title', 'Modifier l\'article')
-@section('page-description', 'Modifier les informations de l\'article')
+@section('breadcrumb-title', 'Articles')
 
 @section('content')
 <div class="max-w-4xl">

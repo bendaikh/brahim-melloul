@@ -1,8 +1,7 @@
 @extends('admin.layouts.admin')
 
 @section('title', 'Nouvelle marque')
-@section('page-title', 'Nouvelle marque')
-@section('page-description', 'Créer une nouvelle marque pour vos articles')
+@section('breadcrumb-title', 'Marques')
 
 @section('content')
 <div class="max-w-2xl">

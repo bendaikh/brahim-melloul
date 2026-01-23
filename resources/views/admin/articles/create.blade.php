@@ -1,8 +1,7 @@
 @extends('admin.layouts.admin')
 
 @section('title', 'Nouvel article')
-@section('page-title', 'Nouvel article')
-@section('page-description', 'Créer un nouvel article dans le catalogue')
+@section('breadcrumb-title', 'Articles')
 
 @section('content')
 <div class="max-w-4xl">

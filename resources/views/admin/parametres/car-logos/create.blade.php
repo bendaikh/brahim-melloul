@@ -1,8 +1,7 @@
 @extends('admin.layouts.admin')
 
 @section('title', 'Nouveau logo de voiture')
-@section('page-title', 'Nouveau logo de voiture')
-@section('page-description', 'Ajouter un nouveau logo de marque automobile')
+@section('breadcrumb-title', 'Logos Voitures')
 
 @section('content')
 <div class="max-w-2xl">

@@ -1,8 +1,7 @@
 @extends('admin.layouts.admin')
 
 @section('title', 'Marques')
-@section('page-title', 'Marques')
-@section('page-description', 'Gérez les marques des articles')
+@section('breadcrumb-title', 'Marques')
 
 @section('content')
 <div class="space-y-6">

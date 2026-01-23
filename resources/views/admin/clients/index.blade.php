@@ -1,8 +1,7 @@
 @extends('admin.layouts.admin')
 
 @section('title', 'Clients')
-@section('page-title', 'Clients')
-@section('page-description', 'Gérez vos clients')
+@section('breadcrumb-title', 'Clients')
 
 @section('content')
 <div class="space-y-6">

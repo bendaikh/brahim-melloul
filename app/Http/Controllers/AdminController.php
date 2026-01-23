@@ -547,4 +547,59 @@ class AdminController extends Controller
         return redirect()->route('admin.clients.index')
             ->with('success', 'Client supprimé avec succès.');
     }
+
+    // ==================== AJAX MODULE HANDLERS ====================
+    
+    /**
+     * Get module form as HTML fragment (for SPA dashboard)
+     */
+    public function getModuleForm(Request $request, $module)
+    {
+        $html = '';
+        
+        match($module) {
+            'articles' => $html = view('admin.modules.articles.form')->render(),
+            'clients' => $html = view('admin.modules.clients.form')->render(),
+            'representants' => $html = view('admin.modules.representants.form')->render(),
+            'categories' => $html = view('admin.modules.categories.form')->render(),
+            'brands' => $html = view('admin.modules.brands.form')->render(),
+            'suppliers' => $html = view('admin.modules.suppliers.form')->render(),
+            'sales-logo' => $html = view('admin.modules.sales-logo.form')->render(),
+            default => $html = '<p>Module non trouvé</p>'
+        };
+        
+        return response()->json([
+            'html' => $html,
+            'success' => true
+        ]);
+    }
+    
+    /**
+     * Get module list as HTML fragment
+     */
+    public function getModuleList(Request $request, $module)
+    {
+        $html = '';
+        
+        $data = match($module) {
+            'articles' => ['items' => Article::with(['category', 'brand', 'carLogo', 'representant'])->paginate(20)],
+            'clients' => ['items' => Client::with('representant')->paginate(20)],
+            'representants' => ['items' => Representant::paginate(20)],
+            'categories' => ['items' => Category::withCount('articles')->paginate(20)],
+            'brands' => ['items' => Brand::withCount('articles')->paginate(20)],
+            default => ['items' => []]
+        };
+        
+        if ($data['items'] && $data['items']->count() > 0) {
+            $html = view("admin.modules.{$module}.list", $data)->render();
+        } else {
+            // Return empty state HTML
+            $html = '<div style="text-align: center; padding: 40px; color: #999;"><i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px; display: block;"></i><p>Aucun ' . $module . ' trouvé</p></div>';
+        }
+        
+        return response()->json([
+            'html' => $html,
+            'success' => true
+        ]);
+    }
 }
